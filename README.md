@@ -12,59 +12,47 @@ A threat actor compromised multiple Trivy distribution channels simultaneously:
 
 The injected infostealer dumped CI runner process memory, harvested credentials from 50+ filesystem paths, and exfiltrated encrypted data to attacker infrastructure.
 
-## Playbooks
+## An AI Agent Running These Playbooks Will:
 
 ### [Detection & Response](trivy-analysis-playbook.md)
 
-Determine if your organization was compromised. This playbook walks through:
-
-- Identifying all trivy usage across your GitHub org (actions, binaries, Docker images)
-- Downloading and searching all GitHub Actions run logs from the exposure window
-- Detecting compromised binary versions, tag-based action references, and Docker pulls
-- Checking for indicators of compromise (exfiltration repos, memory access patterns)
-- Secret rotation guidance if compromise is detected
+- **Identify** all trivy usage across your GitHub org — actions, binaries, Docker images
+- **Download** all GitHub Actions run logs from the exposure window in parallel
+- **Detect** compromised binary versions (v0.69.4/5/6), tag-based action references, and unverified Docker pulls
+- **Verify** every trivy-action commit hash predates the compromise
+- **Check** for indicators of compromise — exfiltration repos, process memory access, typosquatted domains
+- **Report** a per-repo summary of findings with secret rotation guidance
 
 ### [Hardening & Prevention](trivy-hardening-playbook.md)
 
-Eliminate the attack surfaces that made this compromise possible:
+- **Compute** SHA256 checksums for a known-safe trivy `.deb` release
+- **Replace** all third-party APT repo installs with direct `.deb` download + hardcoded SHA256
+- **Pin** all GitHub Action references to immutable commit hashes
+- **Bypass** `setup-trivy` entirely by adding `skip-setup-trivy: true`
+- **Upgrade** Docker-based trivy-action versions to composite actions (eliminates Docker image attack surface)
+- **Create** branches and PRs for each affected repo
 
-- Pin GitHub Actions to commit hashes (not mutable tags)
-- Bypass `setup-trivy` entirely with `skip-setup-trivy: true`
-- Replace the third-party APT repo with direct `.deb` download + hardcoded SHA256
-- Remove Docker image tag dependencies by upgrading to composite actions
-- Complete hardened workflow example with architecture-aware binary installation
-
-## Using with an AI agent
+## Usage
 
 These playbooks are designed to be executed by an AI coding agent (Claude Code, Cursor, GitHub Copilot, etc.) with access to the `gh` CLI and your organization's repositories.
 
-### Detection
+### Detection — paste this prompt to your agent:
 
-Give the agent the detection playbook and ask it to:
+```
+Run the Trivy supply chain compromise detection playbook against our
+GitHub org. Download all workflow run logs from the exposure window
+(March 19-22, 2026), search for compromised versions, check for
+indicators of compromise, and report findings.
+```
 
-> Run the Trivy supply chain compromise detection playbook against our GitHub org. Download all workflow run logs from the exposure window (March 19-22, 2026), search for compromised versions, check for indicators of compromise, and report findings.
+### Hardening — paste this prompt to your agent:
 
-The agent will:
-1. Set the variables (`ORG`, `SINCE`, `UNTIL`, `LOG_DIR`)
-2. Enumerate all repos and workflow runs via `gh` CLI
-3. Download logs in parallel and search for compromised versions
-4. Check for IOCs (tpcp-docs repos, memory access, tag-based references)
-5. Verify all trivy-action commit hashes predate the compromise
-6. Report a summary of findings per repo
-
-### Hardening
-
-Give the agent the hardening playbook and ask it to:
-
-> Follow the Trivy hardening playbook to secure our CI pipelines. Compute SHA256 checksums for the safe trivy version, find and replace all APT repo installs with direct downloads, pin all actions to commit hashes, and add skip-setup-trivy to all trivy-action calls.
-
-The agent will:
-1. Determine the safe trivy version and compute `.deb` checksums
-2. Search all workflow files across the org for trivy references
-3. Replace APT repo installs with direct `.deb` download + SHA256 verification
-4. Ensure all trivy-action references use commit hashes
-5. Add `skip-setup-trivy: true` where missing
-6. Create branches and PRs for each affected repo
+```
+Follow the Trivy hardening playbook to secure our CI pipelines.
+Compute SHA256 checksums for the safe trivy version, find and replace
+all APT repo installs with direct downloads, pin all actions to commit
+hashes, and add skip-setup-trivy to all trivy-action calls.
+```
 
 ### Tips for agents
 
