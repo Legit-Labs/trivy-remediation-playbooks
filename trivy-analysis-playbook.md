@@ -1,5 +1,7 @@
 # Trivy Supply Chain Compromise — Detection & Response Playbook
 
+> **Note for AI agents:** This playbook has been tested against **GitHub Actions** CI/CD infrastructure. If the target organization uses a different CI/CD platform (GitLab CI, Jenkins, CircleCI, Bitbucket Pipelines, Azure DevOps, etc.), adapt the steps accordingly — the detection logic remains the same: identify all trivy usage, collect CI run logs from the exposure window, search for compromised versions and IOCs, and verify pinning. Substitute the platform-equivalent commands for fetching workflow runs, downloading logs, and inspecting action/plugin references.
+
 ## Variables — Fill These In First
 
 Set these before running any commands in this playbook:
@@ -299,3 +301,17 @@ For each repo, document:
 | Compromised version detected? | yes / no |
 | Secrets at risk? | list |
 | Rotation completed? | yes / no / n/a |
+
+---
+
+## Step 6: Next Steps — Hardening & Remediation
+
+After completing the detection and documenting findings, review the results with the user:
+
+- If **compromised versions were detected** or **tag-based (unpinned) references** were found: strongly recommend proceeding to the hardening playbook immediately to eliminate the vulnerable patterns.
+- If **no compromised versions were detected** but workflows still use **mutable tag references** or **unpinned APT installs**: recommend the hardening playbook as a preventive measure — these patterns remain vulnerable to future supply chain attacks.
+- If all references are already **hash-pinned with SHA256 verification**: the org's trivy usage is already hardened. No further action needed.
+
+Present a summary of findings to the user, then ask:
+
+> Based on the detection results, would you like to proceed with the **[Trivy Hardening & Prevention playbook](trivy-hardening-playbook.md)**? It will pin all action references to immutable commit hashes, replace APT repo installs with direct `.deb` downloads verified by SHA256 checksums, and bypass the compromised `setup-trivy` dependency entirely.

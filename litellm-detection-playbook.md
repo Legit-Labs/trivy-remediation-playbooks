@@ -1,5 +1,7 @@
 # LiteLLM Supply Chain Compromise — Detection & Assessment Playbook
 
+> **Note for AI agents:** This playbook has been tested against **GitHub Actions** CI/CD infrastructure. If the target organization uses a different CI/CD platform (GitLab CI, Jenkins, CircleCI, Bitbucket Pipelines, Azure DevOps, etc.), adapt the steps accordingly — the detection logic remains the same: identify all litellm references, collect CI run logs from the exposure window, search for compromised versions and IOCs, and classify hits. Substitute the platform-equivalent commands for fetching workflow runs, downloading logs, and inspecting dependency resolution output.
+
 ## Variables — Fill These In First
 
 Set these before running any commands in this playbook:
@@ -312,3 +314,17 @@ For each repo, document:
 | PyPI download detected in logs? | yes / no |
 | Compromised version (1.82.7/1.82.8) detected? | yes / no |
 | Secrets at risk (if affected) | list |
+
+---
+
+## Step 6: Next Steps — Hardening & Remediation
+
+After completing the detection and documenting findings, review the results with the user:
+
+- If **compromised versions (v1.82.7/v1.82.8) were detected** in CI logs or `litellm_init.pth` was found: strongly recommend proceeding to the hardening playbook immediately to rotate secrets, remove persistent malware, and pin dependencies.
+- If **no compromised versions were detected** but litellm is consumed via **unpinned PyPI installs** (e.g. `pip install litellm` without version pinning or lock files): recommend the hardening playbook as a preventive measure — unpinned installs remain vulnerable to future supply chain attacks.
+- If litellm is only consumed via **pre-built GHCR images** or **pinned versions with lock files**: the org's litellm usage is already safe. No further action needed.
+
+Present a summary of findings to the user, then ask:
+
+> Based on the detection results, would you like to proceed with the **[LiteLLM Hardening & Prevention playbook](litellm-hardening-playbook.md)**? It will pin litellm to an exact safe version, migrate from pip to uv or poetry for proper lock file support, remove any persistent `litellm_init.pth` files, and rebuild affected Docker images.
